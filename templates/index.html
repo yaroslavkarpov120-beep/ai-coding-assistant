@@ -267,9 +267,22 @@
   </div>
   <div class="status">
     <div class="dot"></div>
-    Online
+    <span id="remainingLabel">Загрузка...</span>
   </div>
 </header>
+
+<!-- KEY MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center;">
+  <div style="background:#161616;border:1px solid #2a2a2a;border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:12px;">🔑</div>
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">Бесплатные запросы закончились</div>
+    <div style="font-size:0.85rem;color:#666;margin-bottom:24px;line-height:1.6;">
+      Получи бесплатный API ключ на <a href="https://openrouter.ai" target="_blank" style="color:#7c6fff">openrouter.ai</a><br>и продолжи без ограничений
+    </div>
+    <input id="keyInput" type="text" placeholder="sk-or-v1-..." style="width:100%;background:#0e0e0e;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;color:#e0e0e0;font-size:0.9rem;outline:none;margin-bottom:12px;font-family:inherit;"/>
+    <button onclick="saveKey()" style="width:100%;padding:10px;background:#7c6fff;border:none;border-radius:8px;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Сохранить ключ</button>
+  </div>
+</div>
 
 <div id="messages">
   <div class="welcome" id="welcome">
@@ -300,6 +313,30 @@
   const messagesEl = document.getElementById('messages');
   const inputEl = document.getElementById('input');
   const sendBtn = document.getElementById('sendBtn');
+  const modal = document.getElementById('modal');
+
+  async function loadStatus() {
+    const res = await fetch('/status');
+    const data = await res.json();
+    const label = document.getElementById('remainingLabel');
+    if (data.has_key) {
+      label.textContent = 'Свой ключ ✓';
+    } else {
+      label.textContent = `Осталось ${data.remaining} из ${data.limit} бесплатных`;
+    }
+  }
+
+  async function saveKey() {
+    const key = document.getElementById('keyInput').value.trim();
+    if (!key) return;
+    await fetch('/set_key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    modal.style.display = 'none';
+    loadStatus();
+  }
 
   function suggest(el) {
     inputEl.value = el.textContent;
@@ -316,45 +353,32 @@
   }
 
   function addMsg(text, role) {
-    const welcome = document.getElementById('welcome');
-    if (welcome) welcome.remove();
-
+    document.getElementById('welcome')?.remove();
     const msg = document.createElement('div');
     msg.className = `msg ${role}`;
-
     const avatar = document.createElement('div');
     avatar.className = 'avatar';
     avatar.textContent = role === 'user' ? 'Я' : '⌘';
-
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-
-    if (role === 'ai') {
-      bubble.innerHTML = marked.parse(text);
-    } else {
-      bubble.textContent = text;
-    }
-
+    bubble.innerHTML = role === 'ai' ? marked.parse(text) : '';
+    if (role === 'user') bubble.textContent = text;
     msg.appendChild(avatar);
     msg.appendChild(bubble);
     messagesEl.appendChild(msg);
     messagesEl.scrollTop = messagesEl.scrollHeight;
-    return msg;
   }
 
   function addThinking() {
     const msg = document.createElement('div');
     msg.className = 'msg ai';
     msg.id = 'thinking';
-
     const avatar = document.createElement('div');
     avatar.className = 'avatar';
     avatar.textContent = '⌘';
-
     const bubble = document.createElement('div');
     bubble.className = 'bubble thinking';
     bubble.innerHTML = '<span></span><span></span><span></span>';
-
     msg.appendChild(avatar);
     msg.appendChild(bubble);
     messagesEl.appendChild(msg);
@@ -364,13 +388,11 @@
   async function send() {
     const text = inputEl.value.trim();
     if (!text || sendBtn.disabled) return;
-
     addMsg(text, 'user');
     inputEl.value = '';
     inputEl.style.height = 'auto';
     sendBtn.disabled = true;
     addThinking();
-
     try {
       const res = await fetch('/chat', {
         method: 'POST',
@@ -379,15 +401,21 @@
       });
       const data = await res.json();
       document.getElementById('thinking')?.remove();
-      addMsg(data.reply, 'ai');
+      if (data.type === 'limit') {
+        modal.style.display = 'flex';
+      } else {
+        addMsg(data.reply, 'ai');
+        if (data.remaining !== undefined) loadStatus();
+      }
     } catch(e) {
       document.getElementById('thinking')?.remove();
       addMsg('Ошибка соединения с сервером.', 'ai');
     }
-
     sendBtn.disabled = false;
     inputEl.focus();
   }
+
+  loadStatus();
 </script>
 </body>
 </html>
