@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 FREE_LIMIT = 20
-MY_API_KEY = (Path.home() / ".ai_assistant_key").read_text().strip()
+MY_API_KEY = os.environ.get("OPENROUTER_API_KEY") or (Path.home() / ".ai_assistant_key").read_text().strip()
 
 MODELS = [
     "openai/gpt-oss-20b:free",
@@ -95,4 +95,5 @@ def chat():
     return jsonify({"reply": reply, "type": "ai", "remaining": remaining})
 
 if __name__ == "__main__":
-    app.run(debug=False, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
