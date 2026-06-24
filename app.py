@@ -6,7 +6,7 @@ import subprocess, os, secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-FREE_LIMIT = 10
+FREE_LIMIT = 20
 MY_API_KEY = (Path.home() / ".ai_assistant_key").read_text().strip()
 
 MODELS = [
