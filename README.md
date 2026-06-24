@@ -24,7 +24,7 @@
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-coding-assistant
+git clone https://github.com/yaroslavkarpov120-beep/ai-coding-assistant
 cd ai-coding-assistant
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -65,7 +65,9 @@ python assistant.py
 
 Если инструмент оказался полезным — поставь ⭐ на GitHub или поддержи донатом.
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-поддержать-yellow?style=flat-square)](https://buymeacoffee.com)
+[![TON](https://img.shields.io/badge/TON-поддержать-0098EA?style=flat-square&logo=telegram)](https://app.tonkeeper.com/transfer/UQCBJLYt8l_BUUtPfsgg-u5vrLJi1LgHfudknJo73yEAG9rr)
+
+**TON кошелёк:** `UQCBJLYt8l_BUUtPfsgg-u5vrLJi1LgHfudknJo73yEAG9rr`
 
 ---
 
